@@ -68,6 +68,11 @@ open class SimplePagingAdapter(
         }
     }
 
+    fun isFullSpan(position: Int) : Boolean {
+        val holder = getHolder(getData(position))
+        return holder?.isFullSpan(position) ?: false
+    }
+
     private fun getHolder(data: DifferData?): SimpleHolder<DifferData>? {
         val key = if (data == null) {
             DifferData::class.java

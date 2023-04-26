@@ -17,6 +17,11 @@ abstract class SimpleHolder<T : DifferData>(@LayoutRes val res: Int = 0) :
     @LayoutRes
     open fun getItemLayout(position: Int = -1): Int = res
 
+    /**
+     * 是否占满一行
+     */
+    open fun isFullSpan(position: Int = -1): Boolean = false
+
     fun getDataClassType() = this::class.java.getSuperClassGenericType<T>()
 
     /**

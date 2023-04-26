@@ -39,6 +39,17 @@ class PaddingDecoration : RecyclerView.ItemDecoration {
         this.bottomSpace = bottomSpace
     }
 
+    constructor(space: Int, side: Int) {
+        this.leftSpace = space
+        this.rightSpace = space
+        this.topSpace = space
+        this.bottomSpace = space
+        this.leftSide = side
+        this.rightSide = side
+        this.topSide = side
+        this.bottomSide = side
+    }
+
     constructor(
         leftSpace: Int = 0, rightSpace: Int = 0, topSpace: Int = 0, bottomSpace: Int = 0,
         leftSide: Int = 0, rightSide: Int = 0, topSide: Int = 0, bottomSide: Int = 0
