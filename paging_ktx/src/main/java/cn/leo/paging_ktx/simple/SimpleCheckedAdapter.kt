@@ -1,7 +1,10 @@
 package cn.leo.paging_ktx.simple
 
 import androidx.annotation.IntRange
+import androidx.paging.PagingData
 import cn.leo.paging_ktx.adapter.CheckedData
+import cn.leo.paging_ktx.adapter.DifferData
+import kotlinx.coroutines.CoroutineScope
 
 /**
  * @author : ling luo
@@ -208,6 +211,7 @@ open class SimpleCheckedAdapter : SimplePagingAdapter() {
                 )
                 return true
             }
+
             CheckedModel.MULTI -> {
                 val contains = multiCheckIndexList.contains(position)
                 if (contains == isChecked) return false
@@ -241,6 +245,7 @@ open class SimpleCheckedAdapter : SimplePagingAdapter() {
                     return true
                 }
             }
+
             else -> {
                 return false
             }
@@ -301,5 +306,12 @@ open class SimpleCheckedAdapter : SimplePagingAdapter() {
      * 获取单选索引
      */
     open fun getSingleCheckedPosition() = singleCheckIndex
+
+    fun <T : DifferData> setList(scope: CoroutineScope, list: List<T>, defaultCheckPosition: Int) {
+        if (checkedModel == CheckedModel.SINGLE) {
+            singleCheckIndex = defaultCheckPosition
+        }
+        super.setPagingData(scope, PagingData.from(list))
+    }
 
 }
