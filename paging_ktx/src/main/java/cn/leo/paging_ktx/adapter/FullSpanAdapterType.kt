@@ -1,4 +1,4 @@
-package cn.leo.paging_ktx.fullspan
+package cn.leo.paging_ktx.adapter
 
 /*********************************************************************
  * Created by shenglei on 2023/4/26.

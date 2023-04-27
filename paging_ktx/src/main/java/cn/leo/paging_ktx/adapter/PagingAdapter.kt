@@ -1,7 +1,5 @@
 package cn.leo.paging_ktx.adapter
 
-import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.IntRange
 import androidx.annotation.LayoutRes
@@ -16,7 +14,8 @@ import kotlinx.coroutines.launch
  * @date : 2020/5/11
  */
 @Suppress("UNUSED", "UNCHECKED_CAST", "MemberVisibilityCanBePrivate")
-abstract class PagingAdapter<T : Any> : PagingDataAdapter<T, RecyclerView.ViewHolder> {
+abstract class PagingAdapter<T : Any> : PagingDataAdapter<T, RecyclerView.ViewHolder>,
+    AdapterInterface<T> {
 
     constructor() : super(itemCallback())
 
@@ -43,6 +42,7 @@ abstract class PagingAdapter<T : Any> : PagingDataAdapter<T, RecyclerView.ViewHo
             }
         }
     }
+
     //<editor-fold desc="子类必须实现">
     /**
      * 获取条目类型的布局
@@ -51,33 +51,35 @@ abstract class PagingAdapter<T : Any> : PagingDataAdapter<T, RecyclerView.ViewHo
      * @return 布局id
      */
     @LayoutRes
-    protected abstract fun getItemLayout(position: Int): Int
+    abstract override fun getItemLayout(position: Int): Int
 
-    /**
-     * 给条目绑定数据
-     *
-     * @param item  条目帮助类
-     * @param data    对应数据
-     * @param payloads item局部变更
-     */
-    protected abstract fun bindData(item: ItemHelper, data: T?, payloads: MutableList<Any>? = null)
+    abstract override fun bindData(item: ItemHelper, data: T?, payloads: MutableList<Any>?)
+
 
     //</editor-fold>
 
     //<editor-fold desc="父类方法实现">
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        return ViewHolder(parent, viewType)
+        return SimpleViewHolder(
+            parent,
+            viewType,
+            this as AdapterInterface<Any>,
+            onItemClickListener,
+            onItemLongClickListener,
+            onItemChildClickListener,
+            onItemChildLongClickListener
+        )
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        (holder as? PagingAdapter<*>.ViewHolder)?.onBindViewHolder(position)
+        (holder as? SimpleViewHolder)?.onBindViewHolder(position)
     }
 
     override fun getItemViewType(position: Int): Int {
         return getItemLayout(position)
     }
 
-    fun getData(position: Int): T? {
+    override fun getData(position: Int): T? {
         if (position < 0 || position >= itemCount) return null
         return try {
             getItem(position)
@@ -85,18 +87,31 @@ abstract class PagingAdapter<T : Any> : PagingDataAdapter<T, RecyclerView.ViewHo
             null
         }
     }
+
+    override fun getItems(): List<T> {
+        return snapshot().items
+    }
     //</editor-fold>
 
     //<editor-fold desc="数据处理">
     /**
      * 保存提交的数据集
      */
-    protected lateinit var mPagingData: PagingData<T>
+    protected var mPagingData: PagingData<T> = PagingData.empty()
+        set(value) {
+            field = value
+            submitPagingData()
+            notifyPagingDataChanged()
+        }
 
     /**
      * 协程
      */
     protected lateinit var mScope: CoroutineScope
+
+    protected open fun notifyPagingDataChanged() {
+
+    }
 
     /**
      * 采用setPagingData 可以动态增减数据
@@ -104,7 +119,6 @@ abstract class PagingAdapter<T : Any> : PagingDataAdapter<T, RecyclerView.ViewHo
     open fun setPagingData(scope: CoroutineScope, pagingData: PagingData<T>) {
         mScope = scope
         mPagingData = pagingData
-        submitPagingData()
     }
 
     /**
@@ -119,23 +133,21 @@ abstract class PagingAdapter<T : Any> : PagingDataAdapter<T, RecyclerView.ViewHo
     /**
      * 向尾部添加数据
      */
-    fun appendItem(item: T) {
-        if (!this::mPagingData.isInitialized || !this::mScope.isInitialized) {
+    override fun appendItem(item: T) {
+        if (!this::mScope.isInitialized) {
             throw IllegalArgumentException("To add data, you must use the 'setPagingData' method")
         }
         mPagingData = mPagingData.insertFooterItem(item = item)
-        submitPagingData()
     }
 
     /**
      * 向首部添加数据
      */
-    fun prependItem(item: T) {
-        if (!this::mPagingData.isInitialized || !this::mScope.isInitialized) {
+    override fun prependItem(item: T) {
+        if (!this::mScope.isInitialized) {
             throw IllegalArgumentException("To add data, you must use the 'setPagingData' method")
         }
         mPagingData = mPagingData.insertHeaderItem(item = item)
-        submitPagingData()
     }
 
     /**
@@ -143,18 +155,17 @@ abstract class PagingAdapter<T : Any> : PagingDataAdapter<T, RecyclerView.ViewHo
      * @param predicate 条件为false的移除，为true的保留
      */
     fun filterItem(predicate: suspend (T) -> Boolean) {
-        if (!this::mPagingData.isInitialized || !this::mScope.isInitialized) {
+        if (!this::mScope.isInitialized) {
             throw IllegalArgumentException("To edit data, you must use the 'setPagingData' method")
         }
         mPagingData = mPagingData.filter(predicate)
-        submitPagingData()
     }
 
     /**
      * 移除数据
      * @param item 要移除的条目
      */
-    fun removeItem(item: T) {
+    override fun removeItem(item: T) {
         filterItem { it != item }
     }
 
@@ -171,7 +182,7 @@ abstract class PagingAdapter<T : Any> : PagingDataAdapter<T, RecyclerView.ViewHo
      * @param position 条目索引
      * @param payload 局部刷新
      */
-    fun edit(@IntRange(from = 0) position: Int, payload: Any? = null, block: (T?) -> Unit = {}) {
+    override fun edit(@IntRange(from = 0) position: Int, payload: Any?, block: (T?) -> Unit) {
         if (position >= itemCount) {
             return
         }
@@ -191,126 +202,25 @@ abstract class PagingAdapter<T : Any> : PagingDataAdapter<T, RecyclerView.ViewHo
         if (payloads.isEmpty()) {
             onBindViewHolder(holder, position)
         } else {
-            val viewHolder = holder as? PagingAdapter<*>.ViewHolder
+            val viewHolder = holder as? SimpleViewHolder
             val helper = viewHolder?.itemHelper
             val itemHolder = helper?.mItemHolder
             val item = getItem(position)
             if (itemHolder != null) {
                 itemHolder.bindData(helper, item, payloads)
             } else {
-                (holder as? PagingAdapter<*>.ViewHolder)?.onBindViewHolder(position, payloads)
+                viewHolder?.onBindViewHolder(position, payloads)
             }
         }
     }
 
 
     override fun onViewDetachedFromWindow(holder: RecyclerView.ViewHolder) {
-        val viewHolder = holder as? PagingAdapter<*>.ViewHolder
+        val viewHolder = holder as? SimpleViewHolder
         val helper = viewHolder?.itemHelper
         val itemHolder = helper?.mItemHolder
         itemHolder?.onViewDetach(helper)
     }
-
-    inner class ViewHolder internal constructor(parent: ViewGroup, layout: Int) :
-        RecyclerView.ViewHolder(
-            LayoutInflater.from(parent.context)
-                .inflate(layout, parent, false)
-        ),
-        View.OnClickListener,
-        View.OnLongClickListener {
-        val itemHelper: ItemHelper = ItemHelper(this)
-
-        init {
-            itemHelper.setLayoutResId(layout)
-            itemHelper.setOnItemChildClickListener(mOnItemChildClickListenerProxy)
-            itemHelper.setOnItemChildLongClickListener(mOnItemChildLongClickListenerProxy)
-            itemHelper.setRVAdapter(this@PagingAdapter)
-            itemView.setOnClickListener(this)
-            itemView.setOnLongClickListener(this)
-        }
-
-        val mPosition: Int
-            get() = if (bindingAdapterPosition == -1) {
-                bindPosition
-            } else {
-                bindingAdapterPosition
-            }
-
-        //传进来的position值，在手动创建holder时候bindingAdapterPosition为-1，需要使用传进来的值
-        var bindPosition: Int = 0
-
-        fun onBindViewHolder(position: Int, payloads: MutableList<Any>? = null) {
-            bindPosition = position
-            bindData(itemHelper, getItem(position), payloads)
-        }
-
-        override fun onClick(v: View) {
-            if (::mOnItemClickListener.isInitialized) {
-                mOnItemClickListener(this@PagingAdapter, v, mPosition)
-            }
-        }
-
-        override fun onLongClick(v: View): Boolean {
-            if (::mOnItemLongClickListener.isInitialized) {
-                mOnItemLongClickListener(this@PagingAdapter, v, mPosition)
-                return true
-            }
-            return false
-        }
-    }
-
-    //<editor-fold desc="事件监听">
-    private lateinit var mOnItemClickListener:
-                (adapter: PagingAdapter<out Any>, v: View, position: Int) -> Unit
-    private lateinit var mOnItemLongClickListener:
-                (adapter: PagingAdapter<out Any>, v: View, position: Int) -> Unit
-    private lateinit var mOnItemChildClickListener:
-                (adapter: PagingAdapter<out Any>, v: View, position: Int) -> Unit
-    private lateinit var mOnItemChildLongClickListener:
-                (adapter: PagingAdapter<out Any>, v: View, position: Int) -> Unit
-    val mOnItemChildClickListenerProxy:
-                (adapter: PagingAdapter<out Any>, v: View, position: Int) -> Unit =
-        { adapter, v, position ->
-            if (::mOnItemChildClickListener.isInitialized) {
-                mOnItemChildClickListener(adapter, v, position)
-            }
-        }
-    val mOnItemChildLongClickListenerProxy:
-                (adapter: PagingAdapter<out Any>, v: View, position: Int) -> Unit =
-        { adapter, v, position ->
-            if (::mOnItemChildLongClickListener.isInitialized) {
-                mOnItemChildLongClickListener(adapter, v, position)
-            }
-        }
-
-    fun setOnItemClickListener(
-        onItemClickListener:
-            (adapter: PagingAdapter<out Any>, v: View, position: Int) -> Unit
-    ) {
-        mOnItemClickListener = onItemClickListener
-    }
-
-    fun setOnItemLongClickListener(
-        onItemLongClickListener:
-            (adapter: PagingAdapter<out Any>, v: View, position: Int) -> Unit
-    ) {
-        mOnItemLongClickListener = onItemLongClickListener
-    }
-
-    fun setOnItemChildClickListener(
-        onItemChildClickListener:
-            (adapter: PagingAdapter<out Any>, v: View, position: Int) -> Unit
-    ) {
-        mOnItemChildClickListener = onItemChildClickListener
-    }
-
-    fun setOnItemChildLongClickListener(
-        onItemChildLongClickListener:
-            (adapter: PagingAdapter<out Any>, v: View, position: Int) -> Unit
-    ) {
-        mOnItemChildLongClickListener = onItemChildLongClickListener
-    }
-    //</editor-fold>
 
     //<editor-fold desc="状态监听">
 
@@ -361,9 +271,11 @@ abstract class PagingAdapter<T : Any> : PagingDataAdapter<T, RecyclerView.ViewHo
             is LoadState.Loading -> {
                 observer(State.Loading, stateListener)
             }
+
             is LoadState.NotLoading -> {
                 observer(State.Success(noMoreData), stateListener)
             }
+
             is LoadState.Error -> {
                 observer(State.Error, stateListener)
             }

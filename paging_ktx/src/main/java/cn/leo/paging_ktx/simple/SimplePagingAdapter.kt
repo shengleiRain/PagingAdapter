@@ -1,6 +1,10 @@
 package cn.leo.paging_ktx.simple
 
+import android.graphics.Rect
+import android.view.View
 import androidx.paging.PagingData
+import androidx.recyclerview.widget.RecyclerView
+import cn.leo.paging_ktx.adapter.AdapterInterface
 import cn.leo.paging_ktx.adapter.DifferData
 import cn.leo.paging_ktx.adapter.ItemHelper
 import cn.leo.paging_ktx.adapter.PagingAdapter
@@ -16,7 +20,7 @@ import kotlinx.coroutines.launch
  */
 @Suppress("UNUSED", "UNCHECKED_CAST", "MemberVisibilityCanBePrivate")
 open class SimplePagingAdapter(
-    vararg holders: SimpleHolder<*>
+    vararg holders: SimpleHolder<*>,
 ) : PagingAdapter<DifferData>(
     itemCallback(
         areItemsTheSame = { old, new ->
@@ -31,11 +35,52 @@ open class SimplePagingAdapter(
     )
 ) {
 
+    override var onItemClickListener: (adapter: AdapterInterface<out Any>, v: View, position: Int) -> Unit =
+        AdapterInterface.DefaultOnItemClickListener
+    override var onItemLongClickListener: (adapter: AdapterInterface<out Any>, v: View, position: Int) -> Boolean =
+        AdapterInterface.DefaultOnItemLongClickListener
+    override var onItemChildClickListener: (adapter: AdapterInterface<out Any>, v: View, position: Int) -> Unit =
+        AdapterInterface.DefaultOnItemChildClickListener
+    override var onItemChildLongClickListener: (adapter: AdapterInterface<out Any>, v: View, position: Int) -> Boolean =
+        AdapterInterface.DefaultOnItemChildLongClickListener
+
+
     private val holderMap =
         mutableMapOf<Class<DifferData>, SimpleHolder<DifferData>?>()
 
+    private var _recyclerView: RecyclerView? = null
+
+    val recyclerView: RecyclerView
+        get() {
+            checkNotNull(_recyclerView) { "Please get it after onAttachedToRecyclerView()" }
+            return _recyclerView!!
+        }
+
     init {
         cacheHolder(holders)
+    }
+
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        super.onAttachedToRecyclerView(recyclerView)
+        this._recyclerView = recyclerView
+    }
+
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView)
+        this._recyclerView = null
+    }
+
+    override fun notifyPagingDataChanged() {
+        super.notifyPagingDataChanged()
+        holderMap.forEach { (clazz, holder) ->
+            val position = snapshot().items.indexOfFirst { it.javaClass == clazz }
+            holder?.firstPosition = if (position == -1) 0 else position
+        }
+    }
+
+    override fun getViewTypePosition(position: Int): Int {
+        val holder = getHolder(getData(position)) ?: return 0
+        return position - holder.firstPosition
     }
 
     fun addHolder(holder: SimpleHolder<*>) {
@@ -68,7 +113,7 @@ open class SimplePagingAdapter(
         }
     }
 
-    fun isFullSpan(position: Int) : Boolean {
+    fun isFullSpan(position: Int): Boolean {
         val holder = getHolder(getData(position))
         return holder?.isFullSpan(position) ?: false
     }

@@ -1,5 +1,8 @@
 package cn.leo.paging_ktx.adapter
 
+/*********************************************************************
+ * Created by shenglei on 2023/4/26.
+ *********************************************************************/
 import android.content.Context
 import android.util.SparseArray
 import android.view.View
@@ -8,20 +11,15 @@ import android.widget.TextView
 import androidx.annotation.*
 import androidx.core.app.ActivityCompat
 
-/**
- * @author : leo
- * @date : 2020/12/2
- * @description : 条目帮助类
- */
 @Suppress("UNUSED", "UNCHECKED_CAST", "MemberVisibilityCanBePrivate")
-class ItemHelper(private val viewHolder: PagingAdapter<*>.ViewHolder) :
+class ItemHelper(private val viewHolder: SimpleViewHolder) :
     View.OnClickListener, View.OnLongClickListener {
 
     private val viewCache = SparseArray<View>()
     private val clickListenerCache by lazy { ArrayList<Int>() }
     private val longClickListenerCache by lazy { ArrayList<Int>() }
     private val mTags by lazy { HashMap<String, Any>() }
-    lateinit var adapter: PagingAdapter<out Any> private set
+    lateinit var adapter: AdapterInterface<Any> private set
 
     @LayoutRes
     @get:LayoutRes
@@ -31,11 +29,16 @@ class ItemHelper(private val viewHolder: PagingAdapter<*>.ViewHolder) :
     val context: Context = itemView.context
     var tag: Any? = null
 
+    /**
+     * the relative position of the view type in the adapter
+     */
+    val viewTypePosition: Int get() = adapter.getViewTypePosition(position)
+
     private lateinit var mOnItemChildClickListener:
-                (adapter: PagingAdapter<out Any>, v: View, position: Int) -> Unit
+                (adapter: AdapterInterface<Any>, v: View, position: Int) -> Unit
 
     private lateinit var mOnItemChildLongClickListener:
-                (adapter: PagingAdapter<out Any>, v: View, position: Int) -> Unit
+                (adapter: AdapterInterface<Any>, v: View, position: Int) -> Boolean
 
     fun setLayoutResId(@LayoutRes layoutResId: Int) {
         this.itemLayoutResId = layoutResId
@@ -43,21 +46,21 @@ class ItemHelper(private val viewHolder: PagingAdapter<*>.ViewHolder) :
 
     fun setOnItemChildClickListener(
         onItemChildClickListener:
-            (adapter: PagingAdapter<out Any>, v: View, position: Int) -> Unit
+            (adapter: AdapterInterface<Any>, v: View, position: Int) -> Unit
     ) {
         mOnItemChildClickListener = onItemChildClickListener
     }
 
     fun setOnItemChildLongClickListener(
         onItemChildLongClickListener: (
-            adapter: PagingAdapter<out Any>,
+            adapter: AdapterInterface<out Any>,
             v: View, position: Int
-        ) -> Unit
+        ) -> Boolean
     ) {
         mOnItemChildLongClickListener = onItemChildLongClickListener
     }
 
-    fun setRVAdapter(pagedListAdapter: PagingAdapter<out Any>) {
+    fun setRVAdapter(pagedListAdapter: AdapterInterface<Any>) {
         adapter = pagedListAdapter
     }
 
@@ -377,27 +380,6 @@ class ItemHelper(private val viewHolder: PagingAdapter<*>.ViewHolder) :
     }
 
     var mItemHolder: ItemHolder<Any>? = null
-
-    @Suppress("UNCHECKED_CAST")
-    @Deprecated("作废")
-    fun setItemHolder(
-        itemHolderClass: Class<out ItemHolder<out Any>>,
-        payloads: MutableList<Any>? = null
-    ): ItemHolder<Any>? {
-        try {
-            if (mItemHolder == null) {
-                val newInstance = itemHolderClass.newInstance()
-                mItemHolder = newInstance as ItemHolder<Any>?
-                mItemHolder?.initView(this, adapter.getData(position))
-            }
-            mItemHolder?.bindData(this, adapter.getData(position), payloads)
-        } catch (e: InstantiationException) {
-            e.printStackTrace()
-        } catch (e: IllegalAccessException) {
-            e.printStackTrace()
-        }
-        return mItemHolder
-    }
 
     fun setItemHolder(
         itemHolder: ItemHolder<out Any>,

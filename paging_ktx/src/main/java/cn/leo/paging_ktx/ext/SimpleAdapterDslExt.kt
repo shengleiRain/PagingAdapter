@@ -238,25 +238,27 @@ class ClickEventStore(val recyclerView: RecyclerView, val adapter: SimplePagingA
     }
 
     init {
-        adapter.setOnItemClickListener { _, v, position ->
+        adapter.onItemClickListener = { _, v, position ->
             clickEventList.forEach {
                 it.doItemClick(position, v, adapter, recyclerView)
             }
         }
-        adapter.setOnItemLongClickListener { _, v, position ->
+        adapter.onItemLongClickListener = { _, v, position ->
             clickEventList.forEach {
                 it.doItemLongClick(position, v, adapter, recyclerView)
             }
+            true
         }
-        adapter.setOnItemChildClickListener { _, v, position ->
+        adapter.onItemChildClickListener = { _, v, position ->
             clickEventList.forEach {
                 it.doItemChildClick(position, v, adapter, recyclerView)
             }
         }
-        adapter.setOnItemChildLongClickListener { _, v, position ->
+        adapter.onItemChildLongClickListener = { _, v, position ->
             clickEventList.forEach {
                 it.doItemChildLongClick(position, v, adapter, recyclerView)
             }
+            true
         }
     }
 }

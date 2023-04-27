@@ -1,6 +1,8 @@
 package cn.leo.paging_ktx.simple
 
 import androidx.annotation.LayoutRes
+import androidx.recyclerview.widget.RecyclerView.ItemDecoration
+import cn.leo.paging_ktx.adapter.DecorationPadding
 import cn.leo.paging_ktx.adapter.DifferData
 import cn.leo.paging_ktx.adapter.ItemHelper
 import cn.leo.paging_ktx.adapter.ItemHolder
@@ -11,8 +13,15 @@ import cn.leo.paging_ktx.ext.getSuperClassGenericType
  * @date : 2020/11/10
  * @description : 简易holder
  */
-abstract class SimpleHolder<T : DifferData>(@LayoutRes val res: Int = 0) :
+abstract class SimpleHolder<T : DifferData>(
+    @LayoutRes val res: Int = 0,
+    val decorationPadding: DecorationPadding = DecorationPadding()
+) :
     ItemHolder<T>() {
+    /**
+     * 该类型Holder第一次出现的地方，便于后续计算该类型ViewHolder的位置
+     */
+    var firstPosition = 0
 
     @LayoutRes
     open fun getItemLayout(position: Int = -1): Int = res
