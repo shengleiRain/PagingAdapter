@@ -7,7 +7,6 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import cn.leo.paging_ktx.adapter.AdapterInterface
 import cn.leo.paging_ktx.adapter.FullSpanAdapterType
-import cn.leo.paging_ktx.simple.SimplePagingAdapter
 
 /*********************************************************************
  * Created by shenglei on 2023/4/26.

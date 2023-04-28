@@ -2,8 +2,10 @@ package cn.leo.paging_ktx.ext
 
 import android.view.View
 import androidx.annotation.IdRes
+import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.ItemDecoration
 import cn.leo.paging_ktx.adapter.DifferData
 import cn.leo.paging_ktx.simple.SimpleCheckedAdapter
 import cn.leo.paging_ktx.simple.SimpleHolder
@@ -22,9 +24,19 @@ import cn.leo.paging_ktx.decorations.FloatDecoration
 @Target(AnnotationTarget.TYPE)
 annotation class ClickDsl
 
-interface DslAdapterBuilder {
+interface BaseDslAdapterBuilder {
     fun setLayoutManager(layoutManager: RecyclerView.LayoutManager)
+    fun addItemDecoration(itemDecoration: ItemDecoration)
+}
 
+interface DslConcatAdapterBuilder : BaseDslAdapterBuilder {
+    val adapter: ConcatAdapter
+    fun <T : RecyclerView.Adapter<*>> addAdapter(adapter: T): T
+
+    fun <T : RecyclerView.Adapter<*>> addAdapter(dsl: (RecyclerView.() -> T)): T
+}
+
+interface DslAdapterBuilder : BaseDslAdapterBuilder {
     fun <T : DifferData> setPager(pager: SimplePager<*, T>)
 }
 
@@ -293,6 +305,10 @@ class DslSimpleAdapterImpl(val recyclerView: RecyclerView) : DslSimpleAdapterBui
         mLayoutManager = layoutManager
     }
 
+    override fun addItemDecoration(itemDecoration: ItemDecoration) {
+        recyclerView.addItemDecoration(itemDecoration)
+    }
+
     override fun <T : DifferData> setPager(pager: SimplePager<*, T>) {
         adapter.setPager(pager)
     }
@@ -355,9 +371,44 @@ class DslSimpleCheckedAdapterImpl(val recyclerView: RecyclerView) : DslSimpleChe
         mLayoutManager = layoutManager
     }
 
+    override fun addItemDecoration(itemDecoration: ItemDecoration) {
+        recyclerView.addItemDecoration(itemDecoration)
+    }
+
     override fun <T : DifferData> setPager(pager: SimplePager<*, T>) {
         adapter.setPager(pager)
     }
+}
+
+class DslConcatAdapterBuilderImpl(
+    val recyclerView: RecyclerView,
+    config: ConcatAdapter.Config = ConcatAdapter.Config.DEFAULT
+) : DslConcatAdapterBuilder {
+    private val concatAdapter = ConcatAdapter(config)
+    override val adapter: ConcatAdapter
+        get() = concatAdapter
+
+    internal var mLayoutManager: RecyclerView.LayoutManager =
+        LinearLayoutManager(recyclerView.context)
+
+    override fun <T : RecyclerView.Adapter<*>> addAdapter(adapter: T): T {
+        concatAdapter.addAdapter(adapter)
+        return adapter
+    }
+
+    override fun <T : RecyclerView.Adapter<*>> addAdapter(dsl: (RecyclerView.() -> T)): T {
+        val adapter = dsl(recyclerView)
+        return addAdapter(adapter)
+    }
+
+    override fun setLayoutManager(layoutManager: RecyclerView.LayoutManager) {
+        mLayoutManager = layoutManager
+    }
+
+    override fun addItemDecoration(itemDecoration: ItemDecoration) {
+        recyclerView.addItemDecoration(itemDecoration)
+    }
+
 }
 
 /**
@@ -382,4 +433,15 @@ fun RecyclerView.buildCheckedAdapter(init: @ClickDsl DslSimpleCheckedAdapterBuil
     layoutManager = dslSimpleAdapterImpl.mLayoutManager
     adapter = dslSimpleAdapterImpl.adapter
     return dslSimpleAdapterImpl.adapter
+}
+
+fun RecyclerView.buildConcatAdapter(
+    config: ConcatAdapter.Config,
+    init: DslConcatAdapterBuilder.() -> Unit
+): ConcatAdapter {
+    val impl = DslConcatAdapterBuilderImpl(this, config)
+    impl.init()
+    layoutManager = impl.mLayoutManager
+    adapter = impl.adapter
+    return impl.adapter
 }
