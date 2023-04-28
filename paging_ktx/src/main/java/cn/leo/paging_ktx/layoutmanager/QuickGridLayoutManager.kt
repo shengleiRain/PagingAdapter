@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import cn.leo.paging_ktx.adapter.AdapterInterface
 import cn.leo.paging_ktx.adapter.FullSpanAdapterType
 import cn.leo.paging_ktx.simple.SimplePagingAdapter
 
@@ -60,7 +61,7 @@ class QuickGridLayoutManager : GridLayoutManager {
                     spanCount
                 }
 
-                is SimplePagingAdapter -> {
+                is AdapterInterface<*> -> {
                     if (realAdapter.isFullSpan(realPosition)) {
                         spanCount
                     } else {

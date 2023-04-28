@@ -1,6 +1,7 @@
 package cn.leo.paging_ktx.simple
 
 import android.graphics.Rect
+import android.util.Log
 import android.view.View
 import androidx.paging.PagingData
 import androidx.recyclerview.widget.RecyclerView
@@ -58,6 +59,10 @@ open class SimplePagingAdapter(
 
     init {
         cacheHolder(holders)
+        addOnPagesUpdatedListener {
+            Log.d("SimplePagingAdapter", "onPagesUpdated: ")
+            shouldComputePosition = true
+        }
     }
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
@@ -70,17 +75,27 @@ open class SimplePagingAdapter(
         this._recyclerView = null
     }
 
-    override fun notifyPagingDataChanged() {
-        super.notifyPagingDataChanged()
-        holderMap.forEach { (clazz, holder) ->
-            val position = snapshot().items.indexOfFirst { it.javaClass == clazz }
-            holder?.firstPosition = if (position == -1) 0 else position
-        }
-    }
-
     override fun getViewTypePosition(position: Int): Int {
         val holder = getHolder(getData(position)) ?: return 0
+        computePositionAndItemCount()
         return position - holder.firstPosition
+    }
+
+    override fun getViewTypeCount(position: Int): Int {
+        val holder = getHolder(getData(position)) ?: return itemCount
+        computePositionAndItemCount()
+        return holder.itemCount
+    }
+
+    private fun computePositionAndItemCount() {
+        if (!shouldComputePosition) return
+        shouldComputePosition = false
+        Log.d("SimplePagingAdapter", "computePositionAndItemCount: ")
+        holderMap.forEach { (clazz, holder) ->
+            val position = getItems().indexOfFirst { it.javaClass == clazz }
+            holder?.itemCount = getItems().count { it.javaClass == clazz }
+            holder?.firstPosition = if (position == -1) 0 else position
+        }
     }
 
     fun addHolder(holder: SimpleHolder<*>) {
@@ -113,7 +128,7 @@ open class SimplePagingAdapter(
         }
     }
 
-    fun isFullSpan(position: Int): Boolean {
+    override fun isFullSpan(position: Int): Boolean {
         val holder = getHolder(getData(position))
         return holder?.isFullSpan(position) ?: false
     }

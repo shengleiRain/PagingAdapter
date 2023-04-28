@@ -9,7 +9,7 @@ import cn.leo.paging_ktx.simple.SimpleCheckedAdapter
 import cn.leo.paging_ktx.simple.SimpleHolder
 import cn.leo.paging_ktx.simple.SimplePager
 import cn.leo.paging_ktx.simple.SimplePagingAdapter
-import cn.leo.paging_ktx.tools.FloatDecoration
+import cn.leo.paging_ktx.decorations.FloatDecoration
 
 /**
  * @author : ling luo
@@ -366,9 +366,9 @@ class DslSimpleCheckedAdapterImpl(val recyclerView: RecyclerView) : DslSimpleChe
 @Suppress("UNUSED")
 fun RecyclerView.buildAdapter(init: @ClickDsl DslSimpleAdapterBuilder.() -> Unit): SimplePagingAdapter {
     val dslSimpleAdapterImpl = DslSimpleAdapterImpl(this)
+    dslSimpleAdapterImpl.init()
     layoutManager = dslSimpleAdapterImpl.mLayoutManager
     adapter = dslSimpleAdapterImpl.adapter
-    dslSimpleAdapterImpl.init()
     return dslSimpleAdapterImpl.adapter
 }
 
@@ -378,8 +378,8 @@ fun RecyclerView.buildAdapter(init: @ClickDsl DslSimpleAdapterBuilder.() -> Unit
 @Suppress("UNUSED")
 fun RecyclerView.buildCheckedAdapter(init: @ClickDsl DslSimpleCheckedAdapterBuilder.() -> Unit): SimpleCheckedAdapter {
     val dslSimpleAdapterImpl = DslSimpleCheckedAdapterImpl(this)
-    adapter = dslSimpleAdapterImpl.adapter
     dslSimpleAdapterImpl.init()
     layoutManager = dslSimpleAdapterImpl.mLayoutManager
+    adapter = dslSimpleAdapterImpl.adapter
     return dslSimpleAdapterImpl.adapter
 }

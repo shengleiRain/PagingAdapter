@@ -17,6 +17,8 @@ import kotlinx.coroutines.launch
 abstract class PagingAdapter<T : Any> : PagingDataAdapter<T, RecyclerView.ViewHolder>,
     AdapterInterface<T> {
 
+    protected var shouldComputePosition = true
+
     constructor() : super(itemCallback())
 
     constructor(diffCallback: DiffUtil.ItemCallback<T>) : super(diffCallback)
@@ -101,17 +103,13 @@ abstract class PagingAdapter<T : Any> : PagingDataAdapter<T, RecyclerView.ViewHo
         set(value) {
             field = value
             submitPagingData()
-            notifyPagingDataChanged()
+            shouldComputePosition = true
         }
 
     /**
      * 协程
      */
     protected lateinit var mScope: CoroutineScope
-
-    protected open fun notifyPagingDataChanged() {
-
-    }
 
     /**
      * 采用setPagingData 可以动态增减数据

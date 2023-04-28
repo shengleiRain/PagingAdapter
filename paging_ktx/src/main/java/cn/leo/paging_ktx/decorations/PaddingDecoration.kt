@@ -1,4 +1,4 @@
-package cn.leo.paging_ktx.tools
+package cn.leo.paging_ktx.decorations
 
 import android.graphics.Rect
 import android.view.View

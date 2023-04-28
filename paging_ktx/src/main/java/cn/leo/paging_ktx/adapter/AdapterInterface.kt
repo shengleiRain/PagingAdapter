@@ -65,5 +65,9 @@ interface AdapterInterface<T : Any> {
 
     fun getViewTypePosition(position: Int): Int = position
 
+    fun getViewTypeCount(position: Int): Int = getItems().size
+
     fun edit(@IntRange(from = 0) position: Int, payload: Any? = null, block: (T?) -> Unit = {})
+
+    fun isFullSpan(position: Int): Boolean = false
 }
