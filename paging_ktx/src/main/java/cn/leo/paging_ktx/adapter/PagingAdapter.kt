@@ -3,7 +3,12 @@ package cn.leo.paging_ktx.adapter
 import android.view.ViewGroup
 import androidx.annotation.IntRange
 import androidx.annotation.LayoutRes
-import androidx.paging.*
+import androidx.paging.LoadState
+import androidx.paging.PagingData
+import androidx.paging.PagingDataAdapter
+import androidx.paging.filter
+import androidx.paging.insertFooterItem
+import androidx.paging.insertHeaderItem
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.CoroutineScope
@@ -157,6 +162,13 @@ abstract class PagingAdapter<T : Any> : PagingDataAdapter<T, RecyclerView.ViewHo
             throw IllegalArgumentException("To edit data, you must use the 'setPagingData' method")
         }
         mPagingData = mPagingData.filter(predicate)
+    }
+
+    fun removeAll() {
+        if (!this::mScope.isInitialized) {
+            return
+        }
+        mPagingData = PagingData.empty()
     }
 
     /**

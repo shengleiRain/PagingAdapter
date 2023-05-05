@@ -1,6 +1,5 @@
 package cn.leo.paging_ktx.simple
 
-import android.graphics.Rect
 import android.util.Log
 import android.view.View
 import androidx.paging.PagingData
@@ -143,10 +142,16 @@ open class SimplePagingAdapter(
     }
 
     override fun getItemLayout(position: Int): Int {
-        //没有对应数据类型的holder
-        val holder = getHolder(getData(position))
-            ?: throw RuntimeException("SimplePagingAdapter : no match holder")
-        return holder.getItemLayout(position)
+        return try {
+            //没有对应数据类型的holder
+            val holder = getHolder(getData(position))
+                ?: throw RuntimeException("SimplePagingAdapter : position=$position no match holder")
+            holder.getItemLayout(position)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            0
+        }
+
     }
 
     override fun bindData(item: ItemHelper, data: DifferData?, payloads: MutableList<Any>?) {
