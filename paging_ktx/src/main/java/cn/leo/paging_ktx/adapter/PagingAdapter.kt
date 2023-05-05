@@ -67,6 +67,7 @@ abstract class PagingAdapter<T : Any> : PagingDataAdapter<T, RecyclerView.ViewHo
 
     //<editor-fold desc="父类方法实现">
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        if (viewType == 0) return NoneViewHolder(parent)
         return SimpleViewHolder(
             parent,
             viewType,

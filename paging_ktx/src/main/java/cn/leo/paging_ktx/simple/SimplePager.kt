@@ -9,7 +9,8 @@ import kotlinx.coroutines.flow.Flow
  * @date : 2020/11/10
  * @description : 简易数据分页
  */
-class SimplePager<K : Any, V : Any>(
+@OptIn(ExperimentalPagingApi::class)
+class SimplePager<K : Any, V : Any> constructor(
     private val scope: CoroutineScope,
     private val pageSize: Int = 20,
     private val initialLoadSize: Int = pageSize,
@@ -18,6 +19,7 @@ class SimplePager<K : Any, V : Any>(
     private val enablePlaceholders: Boolean = false,
     private val initialKey: K? = null,
     private val pagingSource: () -> PagingSource<K, V>? = { null },
+    private val remoteMediator: RemoteMediator<K, V>? = null,
     private val loadData:
     suspend (PagingSource.LoadParams<K>) -> PagingSource.LoadResult<K, V>? = { null }
 ) {
@@ -31,7 +33,8 @@ class SimplePager<K : Any, V : Any>(
                 maxSize = maxSize,
                 enablePlaceholders = enablePlaceholders
             ),
-            initialKey = initialKey
+            initialKey = initialKey,
+            remoteMediator = remoteMediator
         ) {
             pagingSource() ?: object : PagingSource<K, V>() {
                 override suspend fun load(params: LoadParams<K>): LoadResult<K, V> {
