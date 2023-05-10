@@ -4,6 +4,7 @@ package cn.leo.paging_ktx.adapter
  * Created by shenglei on 2023/4/26.
  *********************************************************************/
 import android.content.Context
+import android.util.Log
 import android.util.SparseArray
 import android.view.View
 import android.widget.ImageView
@@ -95,7 +96,11 @@ class ItemHelper(private val viewHolder: SimpleViewHolder) :
     }
 
     fun <V : View> getViewById(@IdRes viewId: Int, block: (V) -> Unit = {}): ItemHelper {
-        block(findViewById(viewId))
+        try {
+            block(findViewById(viewId))
+        } catch (e: Exception) {
+            Log.e("ItemHelper", "getViewById: ", e)
+        }
         return this
     }
 

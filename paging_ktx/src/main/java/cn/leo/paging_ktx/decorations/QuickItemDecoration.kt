@@ -7,7 +7,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import cn.leo.paging_ktx.adapter.AdapterInterface
 import cn.leo.paging_ktx.adapter.DecorationPadding
-import cn.leo.paging_ktx.adapter.FullSpanAdapterType
 import cn.leo.paging_ktx.adapter.SimpleViewHolder
 import cn.leo.paging_ktx.simple.SimpleHolder
 
@@ -46,19 +45,21 @@ class QuickItemDecoration(
                 val spanIndex = lp.spanIndex
                 outRect.left =
                     computeLeft(spanIndex, sizeAvg, spanCount, paddings.hSide, paddings.hSpace)
-                if (spanSize == 0 || spanSize == spanCount) {
-                    outRect.right = sizeAvg - outRect.left
-                } else {
-                    outRect.right = computeRight(
-                        spanIndex + spanSize - 1,
-                        sizeAvg,
-                        spanCount,
-                        paddings.hSide,
-                        paddings.hSpace
-                    )
-                }
+//                if (spanSize == 0 || spanSize == spanCount) {
+//                    outRect.right = sizeAvg - outRect.left
+//                } else {
+//
+//                }
 
-                if (position < spanCount) { // top edge
+                outRect.right = computeRight(
+                    spanIndex + spanSize - 1,
+                    sizeAvg,
+                    spanCount,
+                    paddings.hSide,
+                    paddings.hSpace
+                )
+
+                if (position * spanSize < spanCount) { // top edge
                     outRect.top = paddings.vSide
                 }
                 outRect.bottom = paddings.vSpace // item bottom
