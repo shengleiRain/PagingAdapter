@@ -7,11 +7,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ItemDecoration
 import cn.leo.paging_ktx.adapter.DifferData
+import cn.leo.paging_ktx.decorations.FloatDecoration
 import cn.leo.paging_ktx.simple.SimpleCheckedAdapter
 import cn.leo.paging_ktx.simple.SimpleHolder
 import cn.leo.paging_ktx.simple.SimplePager
 import cn.leo.paging_ktx.simple.SimplePagingAdapter
-import cn.leo.paging_ktx.decorations.FloatDecoration
 
 /**
  * @author : ling luo
@@ -436,7 +436,7 @@ fun RecyclerView.buildCheckedAdapter(init: @ClickDsl DslSimpleCheckedAdapterBuil
 }
 
 fun RecyclerView.buildConcatAdapter(
-    config: ConcatAdapter.Config,
+    config: ConcatAdapter.Config = ConcatAdapter.Config.DEFAULT,
     init: DslConcatAdapterBuilder.() -> Unit
 ): ConcatAdapter {
     val impl = DslConcatAdapterBuilderImpl(this, config)
