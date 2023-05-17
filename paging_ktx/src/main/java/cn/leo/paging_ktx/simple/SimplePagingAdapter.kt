@@ -1,6 +1,5 @@
 package cn.leo.paging_ktx.simple
 
-import android.util.Log
 import android.view.View
 import androidx.paging.PagingData
 import androidx.recyclerview.widget.RecyclerView
@@ -59,7 +58,6 @@ open class SimplePagingAdapter(
     init {
         cacheHolder(holders)
         addOnPagesUpdatedListener {
-            Log.d("SimplePagingAdapter", "onPagesUpdated: ")
             shouldComputePosition = true
         }
     }
@@ -89,7 +87,6 @@ open class SimplePagingAdapter(
     private fun computePositionAndItemCount() {
         if (!shouldComputePosition) return
         shouldComputePosition = false
-        Log.d("SimplePagingAdapter", "computePositionAndItemCount: ")
         holderMap.forEach { (clazz, holder) ->
             val position = getItems().indexOfFirst { it.javaClass == clazz }
             holder?.itemCount = getItems().count { it.javaClass == clazz }
